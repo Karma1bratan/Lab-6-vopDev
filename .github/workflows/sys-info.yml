@@ -1,0 +1,22 @@
+name: Linux system information
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  system-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show kernel and distribution
+        run: |
+          uname -a
+          cat /etc/os-release
+      - name: Show current user and working directory
+        run: |
+          whoami
+          pwd
+      - name: Show GitHub context
+        run: |
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
