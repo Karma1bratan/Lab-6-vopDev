@@ -1,0 +1,18 @@
+name: Run repository script
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Make script executable
+        run: chmod +x scripts/build.sh
+      - name: Generate build information
+        run: ./scripts/build.sh
+      - name: Print generated file
+        run: cat build_info.txt
