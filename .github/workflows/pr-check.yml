@@ -12,4 +12,5 @@ jobs:
         run: test -f README.md
       - name: Report previous failure
         if: failure()
-        run: echo "Ошибка: одна из предыдущих проверок завершилась неудачно."
+        run: |
+          echo "Ошибка: одна из предыдущих проверок завершилась неудачно."
