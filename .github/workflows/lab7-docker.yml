@@ -14,13 +14,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Python image
-        run: docker build -t lab7-python ./lab7-docker
+      - name: Initialize evidence log
+        run: |
+          mkdir -p /tmp/lab7-evidence
+          {
+            echo "Лабораторная работа № 7 — Docker"
+            echo "Выполнил: Герасимов Назар, группа 25-10"
+            echo "Дата запуска: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo
+          } > /tmp/lab7-evidence/results.txt
 
-      - name: Run Python container
+      - name: Check Docker installation
+        run: |
+          docker --version | tee -a /tmp/lab7-evidence/results.txt
+          docker info --format 'Docker server: {{.ServerVersion}}; OS: {{.OperatingSystem}}' | tee -a /tmp/lab7-evidence/results.txt
+
+      - name: Pull Python image from Docker Hub
+        run: |
+          docker pull python | tee -a /tmp/lab7-evidence/results.txt
+
+      - name: Run Bash inside Python container
+        run: |
+          docker run --rm python bash -lc 'echo "Container shell started"; python --version; echo "Bash container test passed"' | tee -a /tmp/lab7-evidence/results.txt
+          grep -q "Bash container test passed" /tmp/lab7-evidence/results.txt
+
+      - name: Build custom Python image
+        run: |
+          docker build -t lab7-python ./lab7-docker 2>&1 | tee -a /tmp/lab7-evidence/results.txt
+
+      - name: Run custom Python container
         run: |
           output="$(docker run --rm lab7-python)"
-          echo "$output"
+          echo "$output" | tee -a /tmp/lab7-evidence/results.txt
           echo "$output" | grep -q "Hello from Docker!"
           echo "$output" | grep -q "Python version:"
 
@@ -34,4 +59,13 @@ jobs:
             sleep 2
           done
           grep -qi "Welcome to nginx" /tmp/nginx-index.html
+          echo "Nginx HTTP test passed: http://localhost:8080" | tee -a /tmp/lab7-evidence/results.txt
           docker rm -f lab7-nginx
+
+      - name: Upload execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab7-docker-evidence
+          path: /tmp/lab7-evidence/results.txt
+          if-no-files-found: warn
