@@ -1,0 +1,37 @@
+name: Docker lab 7 check
+
+on:
+  push:
+    paths:
+      - "lab7-docker/**"
+      - ".github/workflows/lab7-docker.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Python image
+        run: docker build -t lab7-python ./lab7-docker
+
+      - name: Run Python container
+        run: |
+          output="$(docker run --rm lab7-python)"
+          echo "$output"
+          echo "$output" | grep -q "Hello from Docker!"
+          echo "$output" | grep -q "Python version:"
+
+      - name: Test Nginx container
+        run: |
+          docker run -d --name lab7-nginx -p 8080:80 nginx:alpine
+          for i in $(seq 1 15); do
+            if curl --fail --silent http://localhost:8080/ > /tmp/nginx-index.html; then
+              break
+            fi
+            sleep 2
+          done
+          grep -qi "Welcome to nginx" /tmp/nginx-index.html
+          docker rm -f lab7-nginx
